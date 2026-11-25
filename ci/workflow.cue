@@ -112,7 +112,7 @@ _job: {
 					[for cc in c.ccacheCompilers {"sudo ln -s /usr/bin/ccache /usr/lib/ccache/\(cc) || true"}],
 				]), "\n")
 			},
-			if !c.msvc && c.alpine == null {name: "Install Go", uses: _uses.setupGo, with: "go-version": "stable"},
+			if !c.msvc {name: "Install Go", uses: _uses.setupGo, with: "go-version": "stable"},
 			if !c.msvc && c.alpine == null {
 				name: "Install pprof"
 				run: """
@@ -128,12 +128,14 @@ _job: {
 			},
 			// Keep JavaScript actions on the Ubuntu host. Only the build
 			// and tests need to run against Alpine's musl libc.
+			// Use the host Go toolchain to build a static pprof for Alpine.
 			if c.alpine != null {
 				name: "Build and test on Alpine"
 				run:  """
-					docker run --rm -v "$GITHUB_WORKSPACE:/src" -w /src \(c.alpine.image) sh -ec '
+					CGO_ENABLED=0 GOBIN="$RUNNER_TEMP" go install github.com/google/pprof@latest
+					docker run --rm -v "$GITHUB_WORKSPACE:/src" -v "$RUNNER_TEMP/pprof:/usr/local/bin/pprof:ro" \\
+					  -w /src \(c.alpine.image) sh -ec '
 					  apk add --no-cache \(strings.Join(c.alpine.packages, " "))
-					  GOBIN=/usr/local/bin go install github.com/google/pprof@latest
 					  ruby ci/run.rb \(strings.Join(c.tags, " "))
 					'
 					"""

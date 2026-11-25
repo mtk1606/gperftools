@@ -160,7 +160,6 @@
                     "autoconf",
                     "automake",
                     "build-base",
-                    "go",
                     "libtool",
                     "libunwind-dev",
                     "ruby"

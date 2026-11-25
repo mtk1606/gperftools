@@ -87,7 +87,7 @@ configs: [
 		runners: ["ubuntu-latest"]
 		alpine: {
 			image: "alpine:3.23"
-			packages: ["autoconf", "automake", "build-base", "go", "libtool", "libunwind-dev", "ruby"]
+			packages: ["autoconf", "automake", "build-base", "libtool", "libunwind-dev", "ruby"]
 		}
 		expect: _autotoolsChecks
 	},

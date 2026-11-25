@@ -313,11 +313,16 @@ jobs:
     steps:
       - name: Clone
         uses: actions/checkout@v7
+      - name: Install Go
+        uses: actions/setup-go@v7
+        with:
+          go-version: stable
       - name: Build and test on Alpine
         run: |-
-          docker run --rm -v "$GITHUB_WORKSPACE:/src" -w /src alpine:3.23 sh -ec '
-            apk add --no-cache autoconf automake build-base go libtool libunwind-dev ruby
-            GOBIN=/usr/local/bin go install github.com/google/pprof@latest
+          CGO_ENABLED=0 GOBIN="$RUNNER_TEMP" go install github.com/google/pprof@latest
+          docker run --rm -v "$GITHUB_WORKSPACE:/src" -v "$RUNNER_TEMP/pprof:/usr/local/bin/pprof:ro" \
+            -w /src alpine:3.23 sh -ec '
+            apk add --no-cache autoconf automake build-base libtool libunwind-dev ruby
             ruby ci/run.rb autotools musl
           '
       - name: Upload Test Logs
