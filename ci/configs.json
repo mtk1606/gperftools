@@ -4,7 +4,9 @@
         "msvc",
         "clang",
         "lto",
-        "O0"
+        "O0",
+        "aarch64-distro",
+        "musl"
     ],
     "configs": [
         {
@@ -24,6 +26,7 @@
             "apt": [
                 "libunwind-dev"
             ],
+            "alpine": null,
             "ccache": true,
             "expect": [
                 "getpc_test",
@@ -55,6 +58,7 @@
                 "clang",
                 "libunwind-dev"
             ],
+            "alpine": null,
             "ccache": true,
             "ccacheCompilers": [
                 "clang",
@@ -89,6 +93,7 @@
             "apt": [
                 "libunwind-dev"
             ],
+            "alpine": null,
             "ccache": true,
             "expect": [
                 "getpc_test",
@@ -99,6 +104,78 @@
             "ccacheCompilers": [],
             "msvc": false,
             "builddir": "ci-build/autotools_lto"
+        },
+        {
+            "tags": [
+                "autotools",
+                "lto",
+                "aarch64-distro"
+            ],
+            "sys": "autotools",
+            "runners": [
+                "ubuntu-24.04-arm"
+            ],
+            "configure": [
+                "--enable-frame-pointers",
+                "--enable-libunwind"
+            ],
+            "env": {
+                "CFLAGS": "-g -O2 -flto=auto -mbranch-protection=standard",
+                "CXXFLAGS": "-g -O2 -flto=auto -mbranch-protection=standard",
+                "GPERFTOOLS_ENSURE_PACKAGE_VERSION": "1",
+                "LDFLAGS": "-flto=auto"
+            },
+            "apt": [
+                "libunwind-dev"
+            ],
+            "alpine": null,
+            "ccache": true,
+            "expect": [
+                "getpc_test",
+                "tcmalloc_minimal_debug_unittest",
+                "tcmalloc_debug_unittest",
+                "heap-profiler_unittest"
+            ],
+            "ccacheCompilers": [],
+            "msvc": false,
+            "builddir": "ci-build/autotools_lto_aarch64-distro"
+        },
+        {
+            "tags": [
+                "autotools",
+                "musl"
+            ],
+            "sys": "autotools",
+            "runners": [
+                "ubuntu-latest"
+            ],
+            "configure": [],
+            "env": {
+                "GPERFTOOLS_ENSURE_PACKAGE_VERSION": "1"
+            },
+            "apt": [],
+            "alpine": {
+                "image": "alpine:3.23",
+                "packages": [
+                    "autoconf",
+                    "automake",
+                    "build-base",
+                    "go",
+                    "libtool",
+                    "libunwind-dev",
+                    "ruby"
+                ]
+            },
+            "expect": [
+                "getpc_test",
+                "tcmalloc_minimal_debug_unittest",
+                "tcmalloc_debug_unittest",
+                "heap-profiler_unittest"
+            ],
+            "ccache": false,
+            "ccacheCompilers": [],
+            "msvc": false,
+            "builddir": "ci-build/autotools_musl"
         },
         {
             "tags": [
@@ -118,6 +195,7 @@
             "apt": [
                 "libunwind-dev"
             ],
+            "alpine": null,
             "ccache": true,
             "expect": [
                 "getpc_test",
@@ -150,6 +228,7 @@
                 "libc6-i386",
                 "lib32stdc++6"
             ],
+            "alpine": null,
             "ccache": true,
             "ccacheCompilers": [
                 "i686-linux-gnu-gcc",
@@ -180,6 +259,7 @@
             ],
             "env": {},
             "apt": [],
+            "alpine": null,
             "expect": [],
             "ccache": true,
             "ccacheCompilers": [],
@@ -202,6 +282,7 @@
             ],
             "env": {},
             "apt": [],
+            "alpine": null,
             "expect": [],
             "ccache": true,
             "ccacheCompilers": [],
@@ -215,6 +296,7 @@
                 "opt"
             ],
             "sys": "cmake",
+            "alpine": null,
             "apt": [],
             "ccache": false,
             "ccacheCompilers": [],
@@ -238,6 +320,7 @@
                 "dbg"
             ],
             "sys": "cmake",
+            "alpine": null,
             "apt": [],
             "ccache": false,
             "ccacheCompilers": [],

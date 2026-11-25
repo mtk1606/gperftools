@@ -23,7 +23,7 @@ _autotoolsChecks: [
 // Tags that a config only matches when the query names them; for
 // variants needing a special host/toolchain, or variants of another
 // config. See optInTags in workflow.cue.
-optInTags: ["i386", "msvc", "clang", "lto", "O0"]
+optInTags: ["i386", "msvc", "clang", "lto", "O0", "aarch64-distro", "musl"]
 
 configs: [
 	{
@@ -64,6 +64,31 @@ configs: [
 		}
 		apt: ["libunwind-dev"]
 		ccache: true
+		expect: _autotoolsChecks
+	},
+	{
+		// Exercise aw-backtrace with the aarch64 distro flags from #1653.
+		tags: ["autotools", "lto", "aarch64-distro"]
+		sys: "autotools"
+		runners: ["ubuntu-24.04-arm"]
+		configure: ["--enable-frame-pointers", "--enable-libunwind"]
+		env: {
+			CFLAGS:   "-g -O2 -flto=auto -mbranch-protection=standard"
+			CXXFLAGS: "-g -O2 -flto=auto -mbranch-protection=standard"
+			LDFLAGS:  "-flto=auto"
+		}
+		apt: ["libunwind-dev"]
+		ccache: true
+		expect: _autotoolsChecks
+	},
+	{
+		tags: ["autotools", "musl"]
+		sys: "autotools"
+		runners: ["ubuntu-latest"]
+		alpine: {
+			image: "alpine:3.23"
+			packages: ["autoconf", "automake", "build-base", "go", "libtool", "libunwind-dev", "ruby"]
+		}
 		expect: _autotoolsChecks
 	},
 	{

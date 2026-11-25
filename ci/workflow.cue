@@ -16,6 +16,10 @@ import (
 	configure: [...string] | *[]
 	env: [string]: string
 	apt: [...string] | *[]
+	alpine: *null | {
+		image: string
+		packages: [...string]
+	}
 	// Binaries (relative to the build dir) that must exist and pass
 	// after the test suite has run.
 	expect: [...string] | *[]
@@ -85,7 +89,7 @@ _job: {
 		"runs-on": runner
 		steps: [
 			{name: "Clone", uses: _uses.checkout},
-			if c.sys == "autotools" {
+			if c.sys == "autotools" && c.alpine == null {
 				name: "Install dependencies"
 				run:  """
 					sudo apt-get update
@@ -108,8 +112,8 @@ _job: {
 					[for cc in c.ccacheCompilers {"sudo ln -s /usr/bin/ccache /usr/lib/ccache/\(cc) || true"}],
 				]), "\n")
 			},
-			if !c.msvc {name: "Install Go", uses: _uses.setupGo, with: "go-version": "stable"},
-			if !c.msvc {
+			if !c.msvc && c.alpine == null {name: "Install Go", uses: _uses.setupGo, with: "go-version": "stable"},
+			if !c.msvc && c.alpine == null {
 				name: "Install pprof"
 				run: """
 					go install github.com/google/pprof@latest
@@ -117,10 +121,22 @@ _job: {
 					PATH=$HOME/go/bin:$PATH which -a pprof
 					"""
 			},
-			{
+			if c.alpine == null {
 				"name": "Build and test"
 				run:    "ruby ci/run.rb \(strings.Join(c.tags, " "))"
 				if c.msvc {shell: "bash"}
+			},
+			// Keep JavaScript actions on the Ubuntu host. Only the build
+			// and tests need to run against Alpine's musl libc.
+			if c.alpine != null {
+				name: "Build and test on Alpine"
+				run:  """
+					docker run --rm -v "$GITHUB_WORKSPACE:/src" -w /src \(c.alpine.image) sh -ec '
+					  apk add --no-cache \(strings.Join(c.alpine.packages, " "))
+					  GOBIN=/usr/local/bin go install github.com/google/pprof@latest
+					  ruby ci/run.rb \(strings.Join(c.tags, " "))
+					'
+					"""
 			},
 			{
 				"name": "Upload Test Logs"

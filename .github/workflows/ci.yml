@@ -273,6 +273,60 @@ jobs:
           name: test-logs-${{ github.job }}
           path: ci-build/autotools_lto/*.log
           retention-days: 7
+  autotools_lto_aarch64-distro_ubuntu-24_04-arm:
+    name: autotools lto aarch64-distro (ubuntu-24.04-arm)
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Clone
+        uses: actions/checkout@v7
+      - name: Install dependencies
+        run: |-
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ruby libunwind-dev
+      - name: Configure ccache action
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ github.job }}
+      - name: Add ccache to PATH
+        run: echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
+      - name: Install Go
+        uses: actions/setup-go@v7
+        with:
+          go-version: stable
+      - name: Install pprof
+        run: |-
+          go install github.com/google/pprof@latest
+          echo "PATH=$HOME/go/bin:$PATH" >> $GITHUB_ENV
+          PATH=$HOME/go/bin:$PATH which -a pprof
+      - name: Build and test
+        run: ruby ci/run.rb autotools lto aarch64-distro
+      - name: Upload Test Logs
+        uses: actions/upload-artifact@v7
+        if: ${{ always() }}
+        with:
+          name: test-logs-${{ github.job }}
+          path: ci-build/autotools_lto_aarch64-distro/*.log
+          retention-days: 7
+  autotools_musl_ubuntu-latest:
+    name: autotools musl (ubuntu-latest)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone
+        uses: actions/checkout@v7
+      - name: Build and test on Alpine
+        run: |-
+          docker run --rm -v "$GITHUB_WORKSPACE:/src" -w /src alpine:3.23 sh -ec '
+            apk add --no-cache autoconf automake build-base go libtool libunwind-dev ruby
+            GOBIN=/usr/local/bin go install github.com/google/pprof@latest
+            ruby ci/run.rb autotools musl
+          '
+      - name: Upload Test Logs
+        uses: actions/upload-artifact@v7
+        if: ${{ always() }}
+        with:
+          name: test-logs-${{ github.job }}
+          path: ci-build/autotools_musl/*.log
+          retention-days: 7
   autotools_O0_ubuntu-latest:
     name: autotools O0 (ubuntu-latest)
     runs-on: ubuntu-latest
